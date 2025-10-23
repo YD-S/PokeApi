@@ -6,13 +6,15 @@ on:
     types:
       - closed
 
+  workflow_dispatch:
+
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
   handle-merge:
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -28,16 +30,25 @@ jobs:
       - name: Extract source and base branches
         id: branchinfo
         run: |
-          echo "SOURCE_BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
-          echo "BASE_BRANCH=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
-          echo "Processing merged PR from ${{ github.event.pull_request.head.ref }} to ${{ github.event.pull_request.base.ref }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual run detected"
+            SOURCE_BRANCH="manual-init"
+            BASE_BRANCH="main"
+          else
+            SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+            BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          fi
+
+          echo "SOURCE_BRANCH=$SOURCE_BRANCH" >> $GITHUB_ENV
+          echo "BASE_BRANCH=$BASE_BRANCH" >> $GITHUB_ENV
+          echo "Processing merged PR from $SOURCE_BRANCH to $BASE_BRANCH"
 
       # Frontend version bump
       - name: Handle frontend next branch
-        if: startsWith(env.SOURCE_BRANCH, 'next-frontend')
+        if: startsWith(env.SOURCE_BRANCH, 'next-frontend') || env.SOURCE_BRANCH == 'manual-init'
         id: frontend_version_bump
         run: |
-          echo "Processing frontend branch $SOURCE_BRANCH"
+          echo "Processing frontend"
           
           if [ ! -f "frontend/package.json" ]; then
             echo "Error: frontend/package.json not found"
@@ -60,12 +71,12 @@ jobs:
           echo "Planned new version: $NEW_VERSION"
           echo "Planned new branch: $NEXT_BRANCH"
 
-      # Backend version bump (Node.js / Express)
+      # Backend version bump
       - name: Handle backend next branch
-        if: startsWith(env.SOURCE_BRANCH, 'next-backend')
+        if: startsWith(env.SOURCE_BRANCH, 'next-backend') || env.SOURCE_BRANCH == 'manual-init'
         id: backend_version_bump
         run: |
-          echo "Processing backend branch $SOURCE_BRANCH"
+          echo "Processing backend"
 
           if [ ! -f "backend/package.json" ]; then
             echo "Error: backend/package.json not found"
@@ -90,29 +101,27 @@ jobs:
 
       # Update frontend version
       - name: Update frontend version
-        if: startsWith(env.SOURCE_BRANCH, 'next-frontend')
+        if: env.COMPONENT == 'frontend'
         run: |
           echo "Updating frontend/package.json to version $NEW_VERSION"
           jq --arg v "$NEW_VERSION" '.version = $v' frontend/package.json > frontend/tmp.json
           mv frontend/tmp.json frontend/package.json
-
           UPDATED_VERSION=$(jq -r '.version' frontend/package.json)
           echo "Verified updated version: $UPDATED_VERSION"
 
-      # Update backend version (Node.js)
+      # Update backend version
       - name: Update backend version
-        if: startsWith(env.SOURCE_BRANCH, 'next-backend')
+        if: env.COMPONENT == 'backend'
         run: |
           echo "Updating backend/package.json to version $NEW_VERSION"
           jq --arg v "$NEW_VERSION" '.version = $v' backend/package.json > backend/tmp.json
           mv backend/tmp.json backend/package.json
-
           UPDATED_VERSION=$(jq -r '.version' backend/package.json)
           echo "Verified updated version: $UPDATED_VERSION"
 
       # Create draft PR from new next branch
       - name: Create draft PR from new next branch to main
-        if: startsWith(env.SOURCE_BRANCH, 'next-frontend') || startsWith(env.SOURCE_BRANCH, 'next-backend')
+        if: env.COMPONENT == 'frontend' || env.COMPONENT == 'backend'
         uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "chore: bump ${{ env.COMPONENT }} version to ${{ env.NEW_VERSION }}"
@@ -136,7 +145,7 @@ jobs:
 
       # Summary
       - name: Summary
-        if: startsWith(env.SOURCE_BRANCH, 'next-frontend') || startsWith(env.SOURCE_BRANCH, 'next-backend')
+        if: env.COMPONENT == 'frontend' || env.COMPONENT == 'backend'
         run: |
           echo "✅ Successfully processed $COMPONENT release workflow"
           echo "🔄 Merged branch: $SOURCE_BRANCH"
