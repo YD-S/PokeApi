@@ -1,20 +1,18 @@
 import { Sequelize } from '@sequelize/core';
 import { PostgresDialect } from '@sequelize/postgres';
 import dotenv from 'dotenv';
-import path from "node:path";
 
-dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
+dotenv.config();
 
 const sequelize = new Sequelize({
     dialect: PostgresDialect,
-    database: process.env.DATABASE_NAME,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    host: process.env.DATABASE_HOST,
+    host: process.env.POSTGRES_HOST!,
     port: 5432,
-    clientMinMessages: 'notice',
+    user: process.env.POSTGRES_USER!,
+    password: process.env.POSTGRES_PASSWORD!,
+    database: process.env.POSTGRES_DB!,
     timezone: '+00:00',
+    logging: console.log,
 });
-
 
 export default sequelize;
