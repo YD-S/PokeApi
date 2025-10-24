@@ -11,7 +11,6 @@ const app = express();
 app.use(passport.initialize());
 const PORT = Number(process.env.PORT);
 
-
 app.use("/auth", authRoutes);
 
 app.get("/", (_req, res) => {
