@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-    baseURL: 'http://stable-diffusion.42malaga.com:7860/',
+    baseURL: 'http://stable-diffusion.42malaga.com:7860',
     timeout: 10000,
 })
 
