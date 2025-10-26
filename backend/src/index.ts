@@ -5,6 +5,7 @@ import passport from "passport";
 import authRoutes from "./routes/authRoutes";
 import "./models/associations"
 import pokemonRoutes from "./routes/pokemonRoutes";
+import {setupSwagger} from "./config/swagger";
 
 dotenv.config();
 
@@ -13,6 +14,8 @@ app.use(passport.initialize());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const PORT = Number(process.env.PORT);
+
+setupSwagger(app);
 
 app.use("/auth", authRoutes);
 app.use("/pokemon", pokemonRoutes);

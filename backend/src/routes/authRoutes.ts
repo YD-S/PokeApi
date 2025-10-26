@@ -3,16 +3,28 @@ import passport from "../config/passport";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel";
 import Token from "../models/token";
-import {generateTokens} from "../utils/tokenUtils";
-import {hash} from "../utils/tokenUtils";
+import { generateTokens, hash } from "../utils/tokenUtils";
 import User from "../models/userModel";
 
 const router = express.Router();
 
 /**
- * GET /auth/google
- * Initiate Google OAuth2 login
- * Redirects to Google for authentication
+ * @swagger
+ * tags:
+ *   name: Authentication
+ *   description: Endpoints related to user authentication and authorization
+ */
+
+/**
+ * @swagger
+ * /auth/google:
+ *   get:
+ *     summary: Initiate Google OAuth2 login
+ *     description: Redirects to Google for authentication.
+ *     tags: [Authentication]
+ *     responses:
+ *       302:
+ *         description: Redirect to Google login page.
  */
 router.get(
     "/google",
@@ -20,12 +32,18 @@ router.get(
 );
 
 /**
- * GET /auth/google/callback
- * Google OAuth2 callback URL
- * Handles the response from Google and generates JWT tokens
- * Redirects to the client with tokens
+ * @swagger
+ * /auth/google/callback:
+ *   get:
+ *     summary: Handle Google OAuth2 callback
+ *     description: Handles Google's response and generates JWT tokens.
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: OAuth successful
+ *       500:
+ *         description: OAuth failed
  */
-
 router.get(
     "/google/callback",
     passport.authenticate("google", { session: false }),
@@ -45,17 +63,32 @@ router.get(
 );
 
 /**
- * POST /auth/refresh
- * Refresh JWT tokens using a valid refresh token
- * Returns new access and refresh tokens
- * Requires: { refreshToken }
- * Body: { refreshToken }
- * Response: { accessToken, refreshToken }
- * Errors:
- * - 400: Missing refresh token
- *  - 401: Invalid or revoked refresh token
- *  - 404: User not found
- *  - 500: Server error
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     description: Refresh JWT tokens using a valid refresh token.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [refreshToken]
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIs...
+ *     responses:
+ *       200:
+ *         description: Tokens refreshed successfully
+ *       400:
+ *         description: Refresh token required
+ *       401:
+ *         description: Invalid or expired refresh token
+ *       404:
+ *         description: User not found
  */
 router.post("/refresh", async (req, res) => {
     const { refreshToken } = req.body;
@@ -90,16 +123,37 @@ router.post("/refresh", async (req, res) => {
 });
 
 /**
- * POST /auth/login
- * User login with email and password
- * Body: { email, password }
- * Response: { accessToken, refreshToken, user }
- * Errors:
- * - 200: Login successful
- * - 400: Invalid payload
- * - 404: User not found
- * - 401: Invalid password
- * - 500: Server error
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: User login
+ *     description: Login with email and password to receive access and refresh tokens.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 example: myPassword123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Invalid payload
+ *       401:
+ *         description: Invalid password
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
  */
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
@@ -137,17 +191,39 @@ router.post("/login", async (req, res) => {
     }
 });
 
-
 /**
- * POST /auth/register
- * User registration with email, password, and name
- * Body: { email, password, name }
- * Response: { userId, accessToken, refreshToken }
- * Errors:
- * - 201: User registered successfully
- * - 400: Invalid payload
- * - 409: User already exists
- * - 500: Registration failed
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     description: Register a new user account with email, password, and name.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, name]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: ash@pokedex.com
+ *               password:
+ *                 type: string
+ *                 example: pikachuRocks123
+ *               name:
+ *                 type: string
+ *                 example: Ash Ketchum
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Invalid payload
+ *       409:
+ *         description: User already exists
+ *       500:
+ *         description: Registration failed
  */
 router.post("/register", async (req, res) => {
     const { email, password, name } = req.body;
@@ -185,13 +261,28 @@ router.post("/register", async (req, res) => {
 });
 
 /**
- * POST /auth/logout
- * User logout by revoking the refresh token
- * Body: { refreshToken }
- * Response: { message }
- * Errors:
- * - 400: Missing or invalid refresh token
- * - 200: Logged out successfully
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: User logout
+ *     description: Revoke the user's refresh token to log out.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [refreshToken]
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIs...
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *       400:
+ *         description: Missing or invalid refresh token
  */
 router.post("/logout", async (req, res) => {
     const { refreshToken } = req.body;
@@ -205,6 +296,5 @@ router.post("/logout", async (req, res) => {
         return res.status(400).json({ message: "Invalid token" });
     }
 });
-
 
 export default router;
