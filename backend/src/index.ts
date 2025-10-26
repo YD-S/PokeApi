@@ -9,6 +9,8 @@ dotenv.config();
 
 const app = express();
 app.use(passport.initialize());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 const PORT = Number(process.env.PORT);
 
 const authWrapper = (req: Request, res: Response, next: NextFunction) =>

@@ -1,3 +1,4 @@
+// src/config/passport.ts
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import userModel from "../models/userModel";
@@ -14,14 +15,27 @@ passport.use(
         },
         async (_accessToken, _refreshToken, profile, done) => {
             try {
-                const [user] = await userModel.findOrCreate({
+                const email = profile.emails?.[0]?.value ?? `${profile.id}@google.com`;
+                const name = profile.displayName;
+
+                let user = await userModel.findOne({
                     where: { googleId: profile.id },
-                    defaults: {
-                        googleId: profile.id,
-                        email: profile.emails?.[0]?.value ?? `${profile.id}@google.com`,
-                        name: profile.displayName,
-                    },
                 });
+
+                if (!user) {
+                    user = await userModel.findOne({ where: { email } });
+                    if (user) {
+                        await user.update({ googleId: profile.id });
+                    } else {
+                        user = await userModel.create({
+                            googleId: profile.id,
+                            email,
+                            name,
+                            password: null,
+                        });
+                    }
+                }
+
                 return done(null, user);
             } catch (err) {
                 return done(err, undefined);
