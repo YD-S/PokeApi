@@ -128,9 +128,21 @@ router.post("/compose", authWrapper, async (req: Request, res: Response) => {
         });
     }
 
-    const animalPart = selectedAnimals.join(", ");
-    const abilityPart = selectedAbilities.join(", ");
+    // Validate and sanitize selectedAnimals and selectedAbilities
+    const validAnimals = selectedAnimals.filter(
+        (a: any) => typeof a === "string" && animals.includes(a)
+    );
+    const validAbilities = selectedAbilities.filter(
+        (ab: any) => typeof ab === "string" && abilities.includes(ab)
+    );
+    if (validAnimals.length !== selectedAnimals.length || validAbilities.length !== selectedAbilities.length) {
+        return res.status(400).json({
+            message: "Invalid animal or ability selected.",
+        });
+    }
 
+    const animalPart = validAnimals.join(", ");
+    const abilityPart = validAbilities.join(", ");
     const composedPrompt = `A unique Pokémon hybrid that combines the traits of ${animalPart}, 
   with abilities such as ${abilityPart}. Highly detailed fantasy creature, vibrant art, 
   glowing eyes, and colorful background.`;
