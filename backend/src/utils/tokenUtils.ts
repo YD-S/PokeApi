@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import Token from "../models/token";
 import userModel from "../models/userModel";
+import {createHash} from "node:crypto";
 
 export const generateTokens = async (user: userModel) => {
     const jti = uuidv4();
@@ -26,3 +27,7 @@ export const generateTokens = async (user: userModel) => {
 
     return { accessToken, refreshToken };
 };
+
+export function hash(string : string) {
+    return createHash('sha256').update(string).digest('hex');
+}

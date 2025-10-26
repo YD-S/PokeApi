@@ -1,21 +1,49 @@
-import express from "express";
+import express, {NextFunction, Request, Response} from "express";
 import dotenv from "dotenv";
-import path from "node:path";
 import sequelize from "./config/database";
 import passport from "passport";
 import authRoutes from "./routes/authRoutes";
+import "./models/associations"
+import pokemonRoutes from "./routes/pokemonRoutes";
+import {setupSwagger} from "./config/swagger";
+import cors from "cors";
+import path from "path";
+import {authMiddleware, AuthRequest} from "./middleware/authMiddleware";
 
-dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
+dotenv.config();
 
 const app = express();
 app.use(passport.initialize());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Define allowed origins from environment variable or fallback to a default list
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : ["http://localhost:3000"];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            return callback(null, true);
+        } else {
+            return callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true
+}));
 const PORT = Number(process.env.PORT);
 
-app.use("/auth", authRoutes);
+setupSwagger(app);
 
-app.get("/", (_req, res) => {
-    res.status(200).send("Hello World");
-});
+const authWrapper = (req: Request, res: Response, next: NextFunction) =>
+    authMiddleware(req as AuthRequest, res, next);
+
+app.use("/auth", authRoutes);
+app.use("/pokemon", pokemonRoutes);
+app.use("/uploads", authWrapper, express.static(path.join(__dirname, "../uploads")));
 
 (async () => {
     try {
@@ -30,6 +58,6 @@ app.get("/", (_req, res) => {
         });
     } catch (error) {
         console.error("❌ Database connection failed:", error);
-        process.exit(1); // exit if DB fails
+        process.exit(1);
     }
 })();
