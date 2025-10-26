@@ -18,6 +18,7 @@ class Pokemon extends Model<
     declare createdBy: number;
     declare created_at: CreationOptional<Date>;
     declare updated_at: CreationOptional<Date>;
+    declare isPublic: CreationOptional<boolean>;
 }
 
 Pokemon.init(
@@ -34,6 +35,11 @@ Pokemon.init(
         },
         prompt: {
             type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        isPublic: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
             allowNull: false,
         },
         imageUrl: {

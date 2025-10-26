@@ -14,38 +14,20 @@ const authWrapper = (req: Request, res: Response, next: NextFunction) =>
  * @swagger
  * tags:
  *   name: Pokémon
- *   description: Endpoints for creating and managing Pokémon
+ *   description: Endpoints for generating and managing Pokémon
  */
 
 /**
  * @swagger
  * /pokemon/options:
  *   get:
- *     summary: Get Pokémon creation options
- *     description: Returns predefined animals and abilities for composing Pokémon.
+ *     summary: Get available animals and abilities
  *     tags: [Pokémon]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of available animals and abilities
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 animals:
- *                   type: array
- *                   items:
- *                     type: string
- *                 abilities:
- *                   type: array
- *                   items:
- *                     type: string
- *       401:
- *         description: Unauthorized (no or invalid token)
- *       500:
- *         description: Server error
+ *         description: List of animals and abilities
  */
 router.get("/options", authWrapper, (_req: Request, res: Response) => {
     res.json({ animals, abilities });
@@ -55,8 +37,7 @@ router.get("/options", authWrapper, (_req: Request, res: Response) => {
  * @swagger
  * /pokemon/prompt:
  *   post:
- *     summary: Create Pokémon using custom text prompt
- *     description: Generate a Pokémon image based on a free-text user prompt.
+ *     summary: Create a Pokémon using a custom free-text prompt
  *     tags: [Pokémon]
  *     security:
  *       - bearerAuth: []
@@ -66,23 +47,18 @@ router.get("/options", authWrapper, (_req: Request, res: Response) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required: [name, prompt]
  *             properties:
  *               name:
  *                 type: string
- *                 example: "Inferdrake"
  *               prompt:
  *                 type: string
- *                 example: "A fiery dragon with molten wings and glowing eyes"
  *     responses:
  *       201:
  *         description: Pokémon created successfully
  *       400:
- *         description: Missing name or prompt
- *       401:
- *         description: Unauthorized
+ *         description: Invalid request body
  *       500:
- *         description: Failed to generate Pokémon
+ *         description: Server error
  */
 router.post("/prompt", authWrapper, async (req: Request, res: Response) => {
     const { name, prompt } = req.body;
@@ -99,6 +75,7 @@ router.post("/prompt", authWrapper, async (req: Request, res: Response) => {
             prompt,
             imageUrl,
             createdBy: user.id,
+            isPublic: false,
         });
 
         res.status(201).json(pokemon);
@@ -112,8 +89,7 @@ router.post("/prompt", authWrapper, async (req: Request, res: Response) => {
  * @swagger
  * /pokemon/compose:
  *   post:
- *     summary: Create Pokémon from animal and ability combinations
- *     description: Generate a Pokémon image by combining selected animals and abilities.
+ *     summary: Create a Pokémon from selected animals and abilities
  *     tags: [Pokémon]
  *     security:
  *       - bearerAuth: []
@@ -123,30 +99,24 @@ router.post("/prompt", authWrapper, async (req: Request, res: Response) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required: [name, animals, abilities]
  *             properties:
  *               name:
  *                 type: string
- *                 example: "Aqualion"
  *               animals:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example: ["lion", "eagle", "shark"]
  *               abilities:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example: ["water control", "flight"]
  *     responses:
  *       201:
  *         description: Pokémon created successfully
  *       400:
- *         description: Missing or invalid input
- *       401:
- *         description: Unauthorized
+ *         description: Missing required fields
  *       500:
- *         description: Failed to generate Pokémon
+ *         description: Server error
  */
 router.post("/compose", authWrapper, async (req: Request, res: Response) => {
     const { name, animals: selectedAnimals, abilities: selectedAbilities } = req.body;
@@ -172,6 +142,7 @@ router.post("/compose", authWrapper, async (req: Request, res: Response) => {
             prompt: composedPrompt,
             imageUrl,
             createdBy: user.id,
+            isPublic: false,
         });
 
         res.status(201).json(pokemon);
@@ -185,16 +156,13 @@ router.post("/compose", authWrapper, async (req: Request, res: Response) => {
  * @swagger
  * /pokemon:
  *   get:
- *     summary: Get all user-created Pokémon
- *     description: Returns all Pokémon created by the logged-in user.
+ *     summary: Get all Pokémon created by the logged-in user
  *     tags: [Pokémon]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of user-created Pokémon
- *       401:
- *         description: Unauthorized
+ *         description: List of user's Pokémon
  *       500:
  *         description: Server error
  */
@@ -217,8 +185,7 @@ router.get("/", authWrapper, async (req: Request, res: Response) => {
  * @swagger
  * /pokemon/{id}:
  *   get:
- *     summary: Get a Pokémon by ID
- *     description: Fetch a Pokémon by its ID, including creator information.
+ *     summary: Get a Pokémon by ID (public or owned by the user)
  *     tags: [Pokémon]
  *     parameters:
  *       - name: id
@@ -226,16 +193,17 @@ router.get("/", authWrapper, async (req: Request, res: Response) => {
  *         required: true
  *         schema:
  *           type: integer
- *         example: 1
  *     responses:
  *       200:
- *         description: Pokémon details retrieved successfully
+ *         description: Pokémon details
  *       404:
  *         description: Pokémon not found
  *       500:
  *         description: Server error
  */
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", authWrapper, async (req: Request, res: Response) => {
+    const user = (req as AuthRequest).user!;
+
     try {
         const pokemon = await Pokemon.findByPk(req.params.id, {
             include: [{ model: userModel, as: "creator", attributes: ["id", "name", "email"] }],
@@ -243,6 +211,10 @@ router.get("/:id", async (req: Request, res: Response) => {
 
         if (!pokemon) {
             return res.status(404).json({ message: "Pokémon not found." });
+        }
+
+        if (!pokemon.isPublic && pokemon.createdBy !== user.id) {
+            return res.status(403).json({ message: "This Pokémon is private." });
         }
 
         res.json(pokemon);
@@ -254,10 +226,9 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /pokemon/{id}:
- *   delete:
- *     summary: Delete a Pokémon
- *     description: Delete a Pokémon created by the logged-in user.
+ * /pokemon/{id}/visibility:
+ *   patch:
+ *     summary: Toggle Pokémon visibility (public/private)
  *     tags: [Pokémon]
  *     security:
  *       - bearerAuth: []
@@ -267,12 +238,62 @@ router.get("/:id", async (req: Request, res: Response) => {
  *         required: true
  *         schema:
  *           type: integer
- *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isPublic:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Visibility updated
+ *       403:
+ *         description: Not authorized
+ *       404:
+ *         description: Pokémon not found
+ */
+router.patch("/:id/visibility", authWrapper, async (req: Request, res: Response) => {
+    const user = (req as AuthRequest).user!;
+    const { isPublic } = req.body;
+
+    try {
+        const pokemon = await Pokemon.findByPk(req.params.id);
+        if (!pokemon) return res.status(404).json({ message: "Pokémon not found." });
+
+        if (pokemon.createdBy !== user.id) {
+            return res.status(403).json({ message: "You can only update your own Pokémon." });
+        }
+
+        await pokemon.update({ isPublic });
+        res.json({ message: `Pokémon visibility set to ${isPublic ? "public" : "private"}` });
+    } catch (err: any) {
+        console.error("❌ Error updating visibility:", err.message);
+        res.status(500).json({ message: "Failed to update visibility." });
+    }
+});
+
+/**
+ * @swagger
+ * /pokemon/{id}:
+ *   delete:
+ *     summary: Delete a Pokémon created by the logged-in user
+ *     tags: [Pokémon]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
  *         description: Pokémon deleted successfully
  *       403:
- *         description: Not authorized to delete this Pokémon
+ *         description: Unauthorized
  *       404:
  *         description: Pokémon not found
  *       500:

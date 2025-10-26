@@ -1,4 +1,4 @@
-import express from "express";
+import express, {NextFunction, Request, Response} from "express";
 import dotenv from "dotenv";
 import sequelize from "./config/database";
 import passport from "passport";
@@ -6,6 +6,9 @@ import authRoutes from "./routes/authRoutes";
 import "./models/associations"
 import pokemonRoutes from "./routes/pokemonRoutes";
 import {setupSwagger} from "./config/swagger";
+import cors from "cors";
+import path from "path";
+import {authMiddleware, AuthRequest} from "./middleware/authMiddleware";
 
 dotenv.config();
 
@@ -13,12 +16,17 @@ const app = express();
 app.use(passport.initialize());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: "*", credentials: true }));
 const PORT = Number(process.env.PORT);
 
 setupSwagger(app);
 
+const authWrapper = (req: Request, res: Response, next: NextFunction) =>
+    authMiddleware(req as AuthRequest, res, next);
+
 app.use("/auth", authRoutes);
 app.use("/pokemon", pokemonRoutes);
+app.use("/uploads",authWrapper, express.static(path.join(__dirname, "../uploads")));
 
 (async () => {
     try {
