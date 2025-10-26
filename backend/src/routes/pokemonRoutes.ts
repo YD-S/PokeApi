@@ -187,6 +187,8 @@ router.get("/", authWrapper, async (req: Request, res: Response) => {
  *   get:
  *     summary: Get a Pokémon by ID (public or owned by the user)
  *     tags: [Pokémon]
+ *     security:
+ *      - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
