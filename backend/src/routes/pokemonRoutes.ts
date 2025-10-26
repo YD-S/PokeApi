@@ -188,7 +188,7 @@ router.get("/", authWrapper, async (req: Request, res: Response) => {
         });
         res.json(pokemons);
     } catch (err: any) {
-        console.error("❌ Error fetching pokemons:", err.message);
+        console.error("❌ Error fetching Pokémon:", err.message);
         res.status(500).json({ message: "Failed to fetch Pokémon." });
     }
 });
