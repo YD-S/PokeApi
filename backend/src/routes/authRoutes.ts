@@ -52,9 +52,8 @@ router.get(
             const user = req.user as userModel;
             const { accessToken, refreshToken } = await generateTokens(user);
 
-            res.json({ accessToken, refreshToken, user });
-
-            // res.redirect(`${process.env.CLIENT_URL}/auth/success?accessToken=${accessToken}&refreshToken=${refreshToken}`);
+            //res.json({ accessToken, refreshToken, user });
+            res.redirect(`${process.env.CLIENT_URL}/auth/success?accessToken=${accessToken}&refreshToken=${refreshToken}`);
         } catch (err) {
             console.error("Google OAuth callback error:", err);
             res.status(500).json({ message: "OAuth failed" });
