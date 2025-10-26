@@ -9,10 +9,22 @@ import User from "../models/userModel";
 
 const router = express.Router();
 
+/**
+ * GET /auth/google
+ * Initiate Google OAuth2 login
+ * Redirects to Google for authentication
+ */
 router.get(
     "/google",
     passport.authenticate("google", { scope: ["profile", "email"] })
 );
+
+/**
+ * GET /auth/google/callback
+ * Google OAuth2 callback URL
+ * Handles the response from Google and generates JWT tokens
+ * Redirects to the client with tokens
+ */
 
 router.get(
     "/google/callback",
@@ -32,8 +44,19 @@ router.get(
     }
 );
 
-
-
+/**
+ * POST /auth/refresh
+ * Refresh JWT tokens using a valid refresh token
+ * Returns new access and refresh tokens
+ * Requires: { refreshToken }
+ * Body: { refreshToken }
+ * Response: { accessToken, refreshToken }
+ * Errors:
+ * - 400: Missing refresh token
+ *  - 401: Invalid or revoked refresh token
+ *  - 404: User not found
+ *  - 500: Server error
+ */
 router.post("/refresh", async (req, res) => {
     const { refreshToken } = req.body;
     if (!refreshToken) {
@@ -66,6 +89,18 @@ router.post("/refresh", async (req, res) => {
     }
 });
 
+/**
+ * POST /auth/login
+ * User login with email and password
+ * Body: { email, password }
+ * Response: { accessToken, refreshToken, user }
+ * Errors:
+ * - 200: Login successful
+ * - 400: Invalid payload
+ * - 404: User not found
+ * - 401: Invalid password
+ * - 500: Server error
+ */
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -102,6 +137,18 @@ router.post("/login", async (req, res) => {
     }
 });
 
+
+/**
+ * POST /auth/register
+ * User registration with email, password, and name
+ * Body: { email, password, name }
+ * Response: { userId, accessToken, refreshToken }
+ * Errors:
+ * - 201: User registered successfully
+ * - 400: Invalid payload
+ * - 409: User already exists
+ * - 500: Registration failed
+ */
 router.post("/register", async (req, res) => {
     const { email, password, name } = req.body;
 
@@ -137,6 +184,15 @@ router.post("/register", async (req, res) => {
     }
 });
 
+/**
+ * POST /auth/logout
+ * User logout by revoking the refresh token
+ * Body: { refreshToken }
+ * Response: { message }
+ * Errors:
+ * - 400: Missing or invalid refresh token
+ * - 200: Logged out successfully
+ */
 router.post("/logout", async (req, res) => {
     const { refreshToken } = req.body;
     if (!refreshToken) return res.status(400).json({ message: "Refresh token required" });

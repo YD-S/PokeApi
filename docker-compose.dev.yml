@@ -20,6 +20,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     volumes:
+      - ./data/uploads:/app/uploads
       - ./backend:/app
     ports:
       - ${PORT}:${PORT}

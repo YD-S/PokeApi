@@ -1,9 +1,10 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import dotenv from "dotenv";
 import sequelize from "./config/database";
 import passport from "passport";
 import authRoutes from "./routes/authRoutes";
-import {authMiddleware, AuthRequest} from "./middleware/authMiddleware";
+import "./models/associations"
+import pokemonRoutes from "./routes/pokemonRoutes";
 
 dotenv.config();
 
@@ -13,14 +14,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const PORT = Number(process.env.PORT);
 
-const authWrapper = (req: Request, res: Response, next: NextFunction) =>
-    authMiddleware(req as AuthRequest, res, next);
-
 app.use("/auth", authRoutes);
-
-app.get("/", authWrapper, (_req: Request, res: Response) => {
-    res.status(200).send("Hello World");
-});
+app.use("/pokemon", pokemonRoutes);
 
 (async () => {
     try {

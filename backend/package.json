@@ -31,6 +31,8 @@
   "dependencies": {
     "@sequelize/core": "^7.0.0-alpha.46",
     "@sequelize/postgres": "^7.0.0-alpha.46",
+    "@types/axios": "^0.9.36",
+    "axios": "^1.12.2",
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"
