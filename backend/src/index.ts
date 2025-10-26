@@ -43,7 +43,7 @@ const authWrapper = (req: Request, res: Response, next: NextFunction) =>
 
 app.use("/auth", authRoutes);
 app.use("/pokemon", pokemonRoutes);
-app.use("/uploads",authWrapper, express.static(path.join(__dirname, "../uploads")));
+app.use("/uploads", authWrapper, express.static(path.join(__dirname, "../uploads")));
 
 (async () => {
     try {
