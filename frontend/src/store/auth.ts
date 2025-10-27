@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import {defineStore} from 'pinia'
 import api from '../api/axios'
 
 interface User {
@@ -41,6 +41,21 @@ export const useAuthStore = defineStore('auth', {
             localStorage.setItem('refreshToken', data.refreshToken)
         },
 
+        async refreshTokens() {
+            if (!this.refreshToken) {
+                throw new Error('No refresh token available')
+            }
+
+            const { data } = await api.post('/auth/refresh', {
+                refreshToken: this.refreshToken,
+            })
+            this.accessToken = data.accessToken
+            this.refreshToken = data.refreshToken
+
+            localStorage.setItem('accessToken', data.accessToken)
+            localStorage.setItem('refreshToken', data.refreshToken)
+        },
+
         async logout() {
             await api.post('/auth/logout', {
                 refreshToken: this.refreshToken,
@@ -51,5 +66,13 @@ export const useAuthStore = defineStore('auth', {
             localStorage.clear()
             window.location.href = '/login'
         },
+
+        async googleLoginSuccess(accessToken: string, refreshToken: string) {
+            this.accessToken = accessToken
+            this.refreshToken = refreshToken
+            localStorage.setItem('accessToken', accessToken)
+            localStorage.setItem('refreshToken', refreshToken)
+        },
+
     },
 })

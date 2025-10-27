@@ -7,6 +7,7 @@ import Register from '../pages/Register.vue'
 import Dashboard from '../pages/Dashboard.vue'
 import CreatePokemon from '../pages/CreatePokemon.vue'
 import PublicPokemon from '../pages/PublicPokemon.vue'
+import AuthSuccess from "@/pages/AuthSuccess.vue";
 
 const routes: RouteRecordRaw[] = [
     {
@@ -33,6 +34,11 @@ const routes: RouteRecordRaw[] = [
         path: '/pokemon/:id',
         component: PublicPokemon,
         meta: { title: 'View Pokémon - PokéAPI Creator' }
+    },
+    {
+        path: '/auth/success',
+        component : AuthSuccess,
+        meta: { title: 'Google authentication Successful - PokéAPI Creator' }
     },
     {
         path: '/:pathMatch(.*)*',

@@ -1,13 +1,17 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 px-2 sm:px-0">
     <!-- Header -->
-    <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-semibold text-gray-800">Your Pokémon</h2>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <h2 class="text-2xl font-semibold text-gray-800 text-center sm:text-left">
+        Your Pokémon
+      </h2>
       <router-link
           to="/create"
-          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+          class="bg-blue-600 px-4 py-2 rounded-md hover:bg-blue-700 transition text-center sm:text-left"
       >
+        <p class="text-white">
         + Create New
+        </p>
       </router-link>
     </div>
 
@@ -22,22 +26,25 @@
     </div>
 
     <!-- Pokémon Grid -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div
+        v-else
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mt-6"
+    >
       <div
           v-for="p in pokemons"
           :key="p.id"
-          class="bg-white rounded-lg shadow hover:shadow-md transition overflow-hidden"
+          class="bg-white rounded-lg shadow hover:shadow-md transition overflow-hidden flex flex-col"
       >
         <img
             :src="backendUrl + p.imageUrl"
             alt="Pokemon image"
             class="w-full h-48 object-cover"
         />
-        <div class="p-4">
+        <div class="p-4 flex flex-col flex-grow">
           <h3 class="text-lg font-semibold text-gray-800 truncate">{{ p.name }}</h3>
           <p class="text-sm text-gray-500 truncate mb-3">{{ p.prompt }}</p>
 
-          <div class="flex justify-between items-center">
+          <div class="mt-auto flex flex-wrap justify-between items-center gap-2">
             <router-link
                 :to="`/pokemon/${p.id}`"
                 class="text-blue-600 text-sm hover:underline"
@@ -92,6 +99,7 @@ const fetchPokemons = async () => {
 const togglePokemonVisibility = async (pokemon: any) => {
   try {
     const res = await toggleVisibility(pokemon.id, !pokemon.isPublic)
+    pokemon.isPublic = !pokemon.isPublic
     console.log('✅ Visibility toggled:', res.data)
   } catch (err) {
     console.error('❌ Error toggling visibility:', err)
