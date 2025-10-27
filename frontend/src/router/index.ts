@@ -9,11 +9,35 @@ import CreatePokemon from '../pages/CreatePokemon.vue'
 import PublicPokemon from '../pages/PublicPokemon.vue'
 
 const routes: RouteRecordRaw[] = [
-    { path: '/login', component: Login },
-    { path: '/register', component: Register },
-    { path: '/', component: Dashboard, meta: { requiresAuth: true } },
-    { path: '/create', component: CreatePokemon, meta: { requiresAuth: true } },
-    { path: '/pokemon/:id', component: PublicPokemon },
+    {
+        path: '/login',
+        component: Login,
+        meta: { title: 'Login - PokéAPI Creator' }
+    },
+    {
+        path: '/register',
+        component: Register,
+        meta: { title: 'Register - PokéAPI Creator' }
+    },
+    {
+        path: '/',
+        component: Dashboard,
+        meta: { requiresAuth: true, title: 'Dashboard - PokéAPI Creator' }
+    },
+    {
+        path: '/create',
+        component: CreatePokemon,
+        meta: { requiresAuth: true, title: 'Create Pokémon - PokéAPI Creator' }
+    },
+    {
+        path: '/pokemon/:id',
+        component: PublicPokemon,
+        meta: { title: 'View Pokémon - PokéAPI Creator' }
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        redirect: '/'
+    }
 ]
 
 const router = createRouter({
@@ -21,10 +45,19 @@ const router = createRouter({
     routes,
 })
 
-router.beforeEach((to) => {
+router.beforeEach((to, _from, next) => {
     const auth = useAuthStore()
+
+    if (to.meta.title) {
+        document.title = to.meta.title as string
+    }
+
     if (to.meta.requiresAuth && !auth.accessToken) {
-        return '/login'
+        next('/login')
+    } else if ((to.path === '/login' || to.path === '/register') && auth.accessToken) {
+        next('/')
+    } else {
+        next()
     }
 })
 
