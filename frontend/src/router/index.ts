@@ -37,7 +37,7 @@ const routes: RouteRecordRaw[] = [
     },
     {
         path: '/auth/success',
-        component : AuthSuccess,
+        component: AuthSuccess,
         meta: { title: 'Google authentication Successful - PokéAPI Creator' }
     },
     {
