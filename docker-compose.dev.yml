@@ -1,0 +1,66 @@
+
+services:
+  frontend:
+    container_name: frontend_dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - devnet
+    env_file:
+      - .env
+  backend:
+    container_name: backend_dev
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./data/uploads:/app/uploads
+      - ./backend:/app
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - devnet
+    env_file:
+      - .env
+  db:
+    image: postgres:16-alpine
+    container_name: postgres-dev
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devnet
+    env_file:
+      - .env
+
+volumes:
+    pgdata:
+        driver: local
+        driver_opts:
+          type: none
+          device: ./data/postgres
+          o: bind
+networks:
+    devnet:
+        driver: bridge

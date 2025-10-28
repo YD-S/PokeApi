@@ -1,6 +1,6 @@
 {
   "name": "pokeapi-backend",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "",
   "license": "ISC",
   "author": "Yash",
@@ -14,8 +14,13 @@
     "lint": "eslint 'src/**/*.ts'"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.9.1",
+    "@types/passport-google-oauth20": "^2.0.17",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "dotenv": "^17.2.3",
     "eslint": "^9.38.0",
     "express": "^5.1.0",
@@ -25,5 +30,17 @@
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@sequelize/core": "^7.0.0-alpha.46",
+    "@sequelize/postgres": "^7.0.0-alpha.46",
+    "@types/axios": "^0.9.36",
+    "axios": "^1.12.2",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.2",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }
